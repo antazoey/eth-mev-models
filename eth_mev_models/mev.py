@@ -127,3 +127,32 @@ class Bundle(BaseModel):
     """
     Preferences on what data should be shared about the bundle and its transactions
     """
+
+    @classmethod
+    def build_for_block(
+        cls,
+        block: HexInt,
+        max_block: Optional[HexInt] = None,
+        version: Optional[ProtocolVersion] = None,
+        body: Optional[
+            list[Union[BundleHashItem, BundleTxItem, BundleNestedItem]]
+        ] = None,
+        validity: Optional[Validity] = None,
+        privacy: Optional[Privacy] = None,
+    ) -> "Bundle":
+        return cls(
+            version=version or ProtocolVersion.V0_1,
+            inclusion=Inclusion(block=block, max_block=max_block),
+            body=body or [],
+            validity=validity,
+            privacy=privacy,
+        )
+
+    def add_tx(self, tx: HexBytes, can_revert: bool) -> "Bundle":
+        self.body.append(BundleTxItem(tx=tx, can_revert=can_revert))
+
+    def add_hash(self, hash: HexBytes32):
+        self.body.append(BundleHashItem(hash=hash))
+
+    def add_bundle(self, bundle: "Bundle"):
+        self.body.append(BundleNestedItem(bundle=bundle))
