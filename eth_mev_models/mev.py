@@ -1,5 +1,10 @@
 from typing import Union, Optional
-from pydantic import BaseModel, Field
+
+from eth_pydantic_types.hex.bytes import HexBytes32, HexBytes
+from eth_pydantic_types.address import Address
+from eth_pydantic_types.hex.int import HexInt
+from pydantic import Field
+from eth_mev_models.basemodel import BaseModel
 
 from eth_mev_models.common import ProtocolVersion, Refund, Privacy
 
@@ -9,12 +14,12 @@ class Inclusion(BaseModel):
     Data used by block builders to check if the bundle should be considered for inclusion.
     """
 
-    block: int
+    block: HexInt
     """
     The first block the bundle is valid for.
     """
 
-    max_block: Union[int, None] = Field(None, alias="maxBlock")
+    max_block: Union[HexInt, None] = Field(None, alias="maxBlock")
     """
     The last block the bundle is valid for.
     """
@@ -25,7 +30,7 @@ class BundleHashItem(BaseModel):
     The hash of either a transaction or bundle we are trying to backrun.
     """
 
-    hash: bytes
+    hash: HexBytes32
     """
     Tx hash.
     """
@@ -36,7 +41,7 @@ class BundleTxItem(BaseModel):
     A new signed transaction.
     """
 
-    tx: bytes
+    tx: HexBytes
     """
     Bytes of the signed transaction.
     """
@@ -58,12 +63,39 @@ class BundleNestedItem(BaseModel):
     """
 
 
+class RefundConfig(BaseModel):
+    """
+    Specifies what addresses should receive what percent of the overall refund for this bundle,
+    if it is enveloped by another bundle (e.g. a searcher backrun).
+    """
+
+    address: Address
+    """
+    The address to refund.
+    """
+
+    percent: int
+    """
+    The minimum percent of the bundle's earnings to redistribute.
+    """
+
+
 class Validity(BaseModel):
     """
     Requirements for the bundle to be included in the block.
     """
 
     refund: Union[list[Refund], None] = None
+    """
+    Specifies the minimum percent of a given bundle's earnings to redistribute
+    for it to be included in a builder's block.
+    """
+
+    refund_config: Optional[list[RefundConfig]] = Field(None, alias="refundConfig")
+    """
+    Specifies what addresses should receive what percent of the overall refund for this bundle,
+    if it is enveloped by another bundle (e.g. a searcher backrun).
+    """
 
 
 class Bundle(BaseModel):
@@ -81,7 +113,7 @@ class Bundle(BaseModel):
     Data used by block builders to check if the bundle should be considered for inclusion.
     """
 
-    bundle_body: list[Union[BundleHashItem, BundleTxItem, BundleNestedItem]]
+    body: list[Union[BundleHashItem, BundleTxItem, BundleNestedItem]]
     """
     The transactions to include in the bundle.
     """

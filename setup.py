@@ -18,6 +18,7 @@ setup(
     url="https://github.com/antazoey/eth-mev-models",
     include_package_data=True,
     install_requires=[
+        "eth-pydantic-types>=0.2.0,<0.3.0",
         "pydantic>=2.10.4,<3",
     ],
     python_requires=">=3.10,<4",
